@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FlyTune | 飞智超频</title>
+    
+    <link rel="preconnect" href="https://miaoda.feishu.cn">
+    <link href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230F172A'/%3E%3Cpath d='M18 46V18h8v11h20v8H26v9h-8z' fill='%2300D2FF'/%3E%3C/svg%3E">
+
+    <style>
+        :root {
+            --bg-light: #F4F6F9;
+            --text-main: #0F172A;
+            --text-sub: #64748B;
+            --accent-cyan: #00D2FF;
+            --accent-blue: #0066FF;
+            
+            --glass-bg-main: rgba(255, 255, 255, 0.45);
+            --glass-bg-inner: rgba(255, 255, 255, 0.3);
+            --glass-border-top: rgba(255, 255, 255, 1);
+            --glass-border-side: rgba(255, 255, 255, 0.7);
+            --glass-border-bottom: rgba(255, 255, 255, 0.3);
+            
+            --glass-shadow-outer: 0 24px 48px rgba(0, 0, 0, 0.06);
+            --glass-shadow-inner: inset 0 1px 1px rgba(255, 255, 255, 1), inset 0 -1px 1px rgba(255, 255, 255, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            font-family: 'Noto Sans SC', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #main-app { position: relative; z-index: 1; padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+        .aurora-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; background: var(--bg-light); overflow: hidden;
+        }
+        .blob {
+            position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.7;
+            animation: float 15s infinite alternate ease-in-out;
+        }
+        .blob-1 { width: 70vw; height: 70vw; background: rgba(170, 210, 255, 0.9); top: -10%; left: -20%; }
+        .blob-2 { width: 80vw; height: 80vw; background: rgba(200, 230, 255, 0.8); bottom: 10%; right: -20%; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(5vw, 10vh) scale(1.1); }
+        }
+
+        .nav {
+            position: fixed; top: 0; left: 0; width: 100%; height: 64px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 20px; 
+            background: rgba(255, 255, 255, 0.3); 
+            backdrop-filter: blur(16px) saturate(180%); 
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.8); 
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+            z-index: 100;
+        }
+        .logo { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; display: flex; align-items: center;}
+        
+        .nav-btn { 
+            background: rgba(255, 255, 255, 0.6); color: var(--text-main); 
+            padding: 8px 18px; border-radius: 100px; font-size: 13px; font-weight: 600; 
+            text-decoration: none; display: flex; align-items: center;
+            border: 1px solid #FFF;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .nav-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.9); }
+
+        .hero {
+            padding: 120px 20px 40px; text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        
+        .badge {
+            background: var(--glass-bg-inner); color: var(--accent-blue);
+            padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 700;
+            margin-bottom: 20px; 
+            border: 1px solid var(--glass-border-top);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--glass-shadow-inner), 0 4px 10px rgba(0, 102, 255, 0.05);
+            font-family: 'JetBrains Mono';
+        }
+        
+        .hero h1 { font-family: 'Space Grotesk'; font-size: 42px; font-weight: 700; line-height: 1.15; margin-bottom: 16px; }
+        .hero p { font-size: 15px; color: var(--text-sub); max-width: 320px; margin-bottom: 30px; }
+
+        .hud-panel {
+            display: flex; justify-content: space-between; width: 100%; max-width: 340px;
+            background: var(--glass-bg-inner); 
+            backdrop-filter: blur(20px) saturate(200%); -webkit-backdrop-filter: blur(20px) saturate(200%);
+            border-top: 1px solid var(--glass-border-top);
+            border-left: 1px solid var(--glass-border-side);
+            border-right: 1px solid var(--glass-border-side);
+            border-bottom: 1px solid var(--glass-border-bottom);
+            border-radius: 20px; padding: 16px; 
+            box-shadow: var(--glass-shadow-outer), var(--glass-shadow-inner);
+        }
+        .hud-item { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .hud-item:not(:last-child) { border-right: 1px solid rgba(0, 0, 0, 0.06); }
+        .hud-label { font-size: 11px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600;}
+        .hud-val { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; display: flex; align-items: baseline; line-height: 1;}
+        .hud-val span { font-size: 10px; color: var(--accent-blue); margin-left: 2px; font-weight: 600;}
+
+        .content-list { padding: 20px; display: flex; flex-direction: column; gap: 20px; max-width: 500px; margin: 0 auto; }
+
+        .glass-card {
+            position: relative; 
+            background: var(--glass-bg-main);
+            backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-radius: 28px;
+            border-top: 1px solid var(--glass-border-top); 
+            border-left: 1px solid var(--glass-border-side);
+            border-right: 1px solid var(--glass-border-side); 
+            border-bottom: 1px solid var(--glass-border-bottom);
+            box-shadow: var(--glass-shadow-outer), var(--glass-shadow-inner); 
+            padding: 24px; overflow: hidden;
+            --x: 50%; --y: 50%;
+            opacity: 0; transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card.show { opacity: 1; transform: translateY(0); }
+
+        .glass-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle 200px at var(--x) var(--y), rgba(255, 255, 255, 0.8), transparent 60%);
+            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 1;
+        }
+        .glass-card:active::before { opacity: 1; }
+
+        .card-content { position: relative; z-index: 2; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .card-title { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; }
+        
+        .card-tag { 
+            font-family: 'JetBrains Mono'; font-size: 11px; color: var(--accent-blue); 
+            background: rgba(255,255,255,0.5); 
+            padding: 4px 8px; border-radius: 6px; 
+            border: 1px solid var(--glass-border-top);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card-desc { font-size: 14px; color: var(--text-sub); line-height: 1.6; margin-bottom: 20px; }
+
+        .metric-display { display: flex; align-items: baseline; margin-top: 10px;}
+        .metric-num { font-family: 'Space Grotesk'; font-size: 80px; font-weight: 700; line-height: 0.85; letter-spacing: -4px; }
+        .metric-unit { font-size: 24px; font-weight: 700; color: var(--accent-blue); margin-left: 2px; }
+
+        .terminal-light {
+            background: rgba(255, 255, 255, 0.15); 
+            border-top: 1px solid var(--glass-border-top);
+            border-left: 1px solid var(--glass-border-side);
+            border-right: 1px solid var(--glass-border-side);
+            border-bottom: 1px solid var(--glass-border-bottom);
+            border-radius: 16px; padding: 16px; 
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6;
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.4), inset 0 -2px 10px rgba(0,0,0,0.02);
+        }
+        .term-line { display: flex; color: var(--text-sub); margin-bottom: 4px; }
+        .term-prompt { color: var(--accent-blue); margin-right: 8px; font-weight: 800; }
+        .term-cmd { color: var(--text-main); font-weight: 600; }
+        .term-output { color: #10B981; font-weight: 600; }
+        .cursor { display: inline-block; width: 6px; height: 14px; background: var(--accent-blue); animation: blink 1s step-end infinite; vertical-align: middle; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+
+        /* ================= 优化后的核心功能列表 ================= */
+        .feature-list { 
+            display: flex; 
+            flex-direction: column; 
+            margin-top: 16px;
+            position: relative;
+        }
+
+        /* 左侧贯穿的蓝色渐变线 */
+        .feature-list::before {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 20px;
+            bottom: 20px;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-blue), transparent);
+            opacity: 0.2;
+            border-radius: 2px;
+        }
+
+        .feature-item { 
+            display: flex; 
+            align-items: flex-start; 
+            gap: 16px; 
+            padding: 16px 0;
+            position: relative;
+        }
+        
+        /* 给中间的元素加分割线（第一个和最后一个不要） */
+        .feature-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 54px; /* 避开左侧图标 */
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.05), transparent);
+        }
+
+        /* 极简图标（去掉玻璃底座，改用微光） */
+        .feature-icon {
+            width: 40px; 
+            height: 40px; 
+            border-radius: 12px; 
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #FFFFFF, #F0F4F8);
+            color: var(--accent-blue);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 
+                0 4px 12px rgba(0, 102, 255, 0.08),
+                inset 0 1px 2px #FFF;
+            border: 1px solid rgba(0, 102, 255, 0.1);
+            z-index: 2;
+        }
+        
+        .feature-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+        
+        .feature-text { flex: 1; padding-top: 2px; }
+        .feature-text h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text-main); font-family: 'Space Grotesk'; }
+        .feature-text p { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
+
+        footer { text-align: center; color: var(--text-sub); font-size: 12px; padding: 20px; font-family: 'JetBrains Mono'; }
+
+        /* ================= 启动页 ================= */
+        .splash-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        .splash-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .splash-card {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(40px) saturate(250%); -webkit-backdrop-filter: blur(40px) saturate(250%);
+            border-top-left-radius: 32px; border-top-right-radius: 32px;
+            border-top: 2px solid var(--glass-border-top);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08), inset 0 2px 10px rgba(255,255,255,1);
+            z-index: 9999;
+            padding: 24px 24px calc(24px + env(safe-area-inset-bottom));
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .splash-card.active { transform: translateY(0); }
+
+        .drag-handle { width: 48px; height: 5px; background: rgba(0, 0, 0, 0.1); border-radius: 10px; margin: 0 auto 24px auto; }
+
+        .spectrum-bg {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 80px;
+            overflow: hidden; display: flex; justify-content: space-between; align-items: flex-end;
+            z-index: 0; opacity: 0.25; pointer-events: none; 
+        }
+        .bar {
+            width: 4px; background: linear-gradient(to top, transparent, var(--accent-blue), var(--accent-cyan));
+            border-radius: 4px; height: 10%; animation: wave 2s infinite alternate ease-in-out;
+        }
+        .bar:nth-child(1) { animation-delay: 0.1s; height: 60%; }
+        .bar:nth-child(2) { animation-delay: 0.3s; height: 40%; }
+        .bar:nth-child(3) { animation-delay: 0.5s; height: 80%; }
+        .bar:nth-child(4) { animation-delay: 0.2s; height: 30%; }
+        .bar:nth-child(5) { animation-delay: 0.6s; height: 50%; }
+        .bar:nth-child(6) { animation-delay: 0.4s; height: 90%; }
+        .bar:nth-child(7) { animation-delay: 0.1s; height: 70%; }
+        .bar:nth-child(8) { animation-delay: 0.7s; height: 40%; }
+        .bar:nth-child(9) { animation-delay: 0.3s; height: 85%; }
+        .bar:nth-child(10) { animation-delay: 0.5s; height: 20%; }
+        .bar:nth-child(11) { animation-delay: 0.2s; height: 65%; }
+        .bar:nth-child(12) { animation-delay: 0.8s; height: 95%; }
+
+        @keyframes wave { 0% { transform: scaleY(0.8); } 100% { transform: scaleY(1.2); } }
+
+        .splash-content { position: relative; z-index: 10; margin-bottom: 32px; }
+        .splash-content h1 { color: var(--text-main); font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; letter-spacing: -0.5px;}
+        .splash-content p { color: var(--text-sub); font-size: 15px; line-height: 1.6; margin-bottom: 10px; }
+
+        .btn-confirm {
+            position: relative; z-index: 10; width: 100%; height: 56px;
+            background: rgba(255, 255, 255, 0.4); 
+            color: var(--text-main); 
+            border-top: 1px solid var(--glass-border-top);
+            border-left: 1px solid var(--glass-border-side);
+            border-right: 1px solid var(--glass-border-side);
+            border-bottom: 1px solid var(--glass-border-bottom);
+            border-radius: 16px;
+            font-size: 16px; font-weight: 700; cursor: pointer; 
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06), inset 0 2px 2px rgba(255,255,255,1);
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn-confirm:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.8); }
+
+        html { scroll-behavior: smooth; }
+
+        .download-section { padding: 0 20px 24px; max-width: 500px; margin: 0 auto; }
+        .download-card { display: block; opacity: 1; transform: none; }
+        .download-kicker { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--accent-blue); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 8px; }
+        .download-title { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+        .download-sub { color: var(--text-sub); font-size: 12px; line-height: 1.7; margin-bottom: 14px; }
+        .download-version-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 12px 0; border-top: 1px solid rgba(15, 23, 42, 0.08); border-bottom: 1px solid rgba(15, 23, 42, 0.08); margin-bottom: 14px; }
+        .download-version { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; }
+        .download-code { font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-sub); }
+        .download-btn { display: flex; justify-content: center; align-items: center; width: 100%; min-height: 54px; border-radius: 18px; background: #0F172A; color: #FFF; font-size: 15px; font-weight: 700; text-decoration: none; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18); transition: transform 0.2s, opacity 0.2s; }
+        .download-btn:active { transform: scale(0.97); }
+        .download-btn[aria-disabled="true"] { opacity: 0.55; pointer-events: none; }
+        .download-meta { display: grid; gap: 10px; margin-top: 14px; }
+        .download-meta-item { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; }
+        .download-meta-label { color: var(--text-sub); font-size: 11px; flex: none; }
+        .download-meta-value { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--text-main); text-align: right; word-break: break-all; }
+        .download-note { color: var(--text-sub); font-size: 10px; line-height: 1.7; margin-top: 12px; }
+        .download-status { font-size: 11px; color: var(--text-sub); margin-top: 8px; }
+        .download-status.err { color: #B42318; }
+    </style>
+</head>
+<body>
+
+    <!-- ================= 主界面 ================= -->
+    <div id="main-app">
+        <div class="aurora-bg">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+        </div>
+
+        <nav class="nav">
+            <div class="logo">FlyTune</div>
+            <a href="#download" class="nav-btn">下载软件</a>
+        </nav>
+
+        <header class="hero">
+            <div class="badge" id="hero-version">FlyTune v—</div>
+            <h1>打破散热限制<br>一键满血降温</h1>
+            <p>绕过官方保守限制，解锁隐藏的满血功率。配合 30W 以上充电头，彻底告别手机发烫。</p>
+            
+            <div class="hud-panel">
+                <div class="hud-item">
+                    <div class="hud-label">制冷强度</div>
+                    <div class="hud-val" id="val-output">231<span>档</span></div>
+                </div>
+                <div class="hud-item">
+                    <div class="hud-label">实时功耗</div>
+                    <div class="hud-val" id="val-power">32.4<span>W</span></div>
+                </div>
+                <div class="hud-item">
+                    <div class="hud-label">风扇转速</div>
+                    <div class="hud-val" id="val-rpm">6074<span>转</span></div>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-list">
+            <div class="glass-card">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-title">手机瞬间冰凉</div>
+                        <div class="card-tag">实测数据</div>
+                    </div>
+                    <div class="card-desc">实时监控冷面温度。当制冷强度开到最大，温度直接逼近物理极限，游戏再也不掉帧。</div>
+                    <div class="metric-display">
+                        <div class="metric-num">-20.0</div>
+                        <div class="metric-unit">°C</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-title">独立直连，拒绝卡顿</div>
+                        <div class="card-tag">极速响应</div>
+                    </div>
+                    <div class="card-desc">跳过官方繁琐的连接，指令瞬间传达，点哪打哪。</div>
+                    
+                    <div class="terminal-light">
+                        <div class="term-line"><span class="term-prompt">></span><span class="term-cmd">设备连接成功 </span></div>
+                        <div class="term-line"><span class="term-prompt">></span><span class="term-cmd">正在发送超频指令...</span></div>
+                        <div class="term-line"><span class="term-prompt">></span><span class="term-output">当前温度: -17.8°C</span></div>
+                        <div class="term-line"><span class="term-prompt">></span><span class="term-cmd" id="typewriter"></span><span class="cursor"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 砸碎小玻璃框，改用极简列表 -->
+            <div class="glass-card">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-title">为什么选择 FlyTune？</div>
+                        <div class="card-tag">功能优势</div>
+                    </div>
+                    
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                            <div class="feature-text">
+                                <h4>拒绝无脑结冰</h4>
+                                <p>智能温控调节，温度过低自动降频保护，告别冷凝水烧毁主板。</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            </div>
+                            <div class="feature-text">
+                                <h4>告别发热掉帧</h4>
+                                <p>解开官方 20W 限制，开启 30W 满血输出，让手机时刻冰凉。</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                            </div>
+                            <div class="feature-text">
+                                <h4>你的设备你做主</h4>
+                                <p>自定义风扇转速与制冷功率，吃鸡原神都能找到最佳温控方案。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <section class="download-section" id="download">
+            <div class="glass-card show download-card">
+                <div class="download-kicker">CLOUD RELEASE / 云端发布</div>
+                <div class="download-title">下载 FlyTune</div>
+                <div class="download-sub">版本号、安装包地址与哈希均从云端实时读取，软件内也会自动检查同一份云端清单。</div>
+                <div class="download-version-row">
+                    <div class="download-version" id="dl-version">读取中…</div>
+                    <div class="download-code" id="dl-code">versionCode —</div>
+                </div>
+                <a class="download-btn" id="download-btn" href="https://gitee.com/ebinjfjfjg/flytune-cloud" target="_blank" rel="noopener" aria-disabled="true">正在获取最新安装包…</a>
+                <div class="download-meta">
+                    <div class="download-meta-item"><span class="download-meta-label">安装包大小</span><span class="download-meta-value" id="dl-size">—</span></div>
+                    <div class="download-meta-item"><span class="download-meta-label">SHA-256</span><span class="download-meta-value" id="dl-hash">—</span></div>
+                    <div class="download-meta-item"><span class="download-meta-label">发布时间</span><span class="download-meta-value" id="dl-date">—</span></div>
+                </div>
+                <div class="download-note">下载完成后请核对 SHA-256。安装包会校验固定发布签名与云端哈希，校验不通过时不会开放蓝牙与调参。</div>
+                <div class="download-status" id="dl-status">正在连接云端清单…</div>
+            </div>
+        </section>
+
+        <footer>
+            <p>FlyTune 为非官方极客自制工具，请放心使用。</p>
+        </footer>
+    </div>
+
+    <!-- ================= 启动页 ================= -->
+    <div class="splash-overlay" id="splash-overlay" onclick="closeSplash()"></div>
+    
+    <div class="splash-card" id="splash-card">
+        <div class="drag-handle"></div>
+        
+        <div class="spectrum-bg">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+        
+        <div class="splash-content">
+            <h1>欢迎使用<br>FlyTune 满血降温助手</h1>
+            <p>在这里您可以自由调节制冷强度和风扇速度。如果调整后设备出现异常，系统会自动恢复安全默认值，请放心使用。</p>
+        </div>
+        
+        <button class="btn-confirm" onclick="closeSplash()">开始体验</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            initMainPage();
+
+            setTimeout(() => {
+                document.getElementById('splash-overlay').classList.add('active');
+                document.getElementById('splash-card').classList.add('active');
+            }, 300);
+        });
+
+        function closeSplash() {
+            document.getElementById('splash-overlay').classList.remove('active');
+            document.getElementById('splash-card').classList.remove('active');
+        }
+
+        const CLOUD_API = 'https://gitee.com/api/v5/repos/ebinjfjfjg/flytune-cloud/contents/cloud/version.json?ref=master';
+        const CLOUD_FALLBACKS = [
+            'https://cdn.jsdelivr.net/gh/hz-xb/flytune-cloud@main/cloud/version.json',
+            'https://raw.githubusercontent.com/hz-xb/flytune-cloud/main/cloud/version.json'
+        ];
+
+        function b64Utf8(value) {
+            const raw = atob(value.replace(/\s/g, ''));
+            const bytes = Uint8Array.from(raw, c => c.charCodeAt(0));
+            return new TextDecoder('utf-8').decode(bytes);
+        }
+
+        async function readCloudVersion() {
+            const api = await fetch(CLOUD_API, { cache: 'no-store' });
+            if (!api.ok) throw new Error('gitee api ' + api.status);
+            const wrapper = await api.json();
+            if (!wrapper.content) throw new Error('missing content');
+            return JSON.parse(b64Utf8(wrapper.content));
+        }
+
+        async function loadCloudRelease() {
+            let data;
+            try {
+                data = await readCloudVersion();
+            } catch (error) {
+                for (const url of CLOUD_FALLBACKS) {
+                    try {
+                        const response = await fetch(url + '?t=' + Date.now(), { cache: 'no-store' });
+                        if (!response.ok) continue;
+                        data = await response.json();
+                        break;
+                    } catch (_) { /* 换下一条链路 */ }
+                }
+            }
+            const status = document.getElementById('dl-status');
+            if (!data) {
+                status.textContent = '云端清单暂不可达，请稍后刷新。';
+                status.classList.add('err');
+                return;
+            }
+            const version = data.versionName || '未知版本';
+            const apk = (data.apkUrls || [])[0] || '';
+            document.getElementById('hero-version').textContent = 'FlyTune v' + version;
+            document.getElementById('dl-version').textContent = 'FlyTune v' + version;
+            document.getElementById('dl-code').textContent = 'versionCode ' + (data.versionCode || '—');
+            document.getElementById('dl-size').textContent = data.sizeBytes ? (data.sizeBytes / 1048576).toFixed(1) + ' MB' : '—';
+            const hash = data.sha256 || '';
+            document.getElementById('dl-hash').textContent = hash ? hash.slice(0, 20) + '…' : '—';
+            document.getElementById('dl-hash').title = hash;
+            document.getElementById('dl-date').textContent = data.publishedAt ? data.publishedAt.slice(0, 10) : '—';
+            const button = document.getElementById('download-btn');
+            if (apk) {
+                button.href = apk;
+                button.textContent = '下载 FlyTune v' + version + ' APK';
+                button.setAttribute('aria-disabled', 'false');
+                status.textContent = '云端清单已同步 · 下载后请核对 SHA-256';
+            } else {
+                status.textContent = '云端未返回安装包地址。';
+                status.classList.add('err');
+            }
+        }
+
+        let isInitialized = false;
+        function initMainPage() {
+            if (isInitialized) return;
+            isInitialized = true;
+
+            loadCloudRelease();
+
+            const cards = document.querySelectorAll('.glass-card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => { entry.target.classList.add('show'); }, index * 150); 
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            cards.forEach(card => observer.observe(card));
+
+            cards.forEach(card => {
+                card.addEventListener('touchmove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    card.style.setProperty('--x', `${touch.clientX - rect.left}px`);
+                    card.style.setProperty('--y', `${touch.clientY - rect.top}px`);
+                }, { passive: true });
+            });
+
+            setInterval(() => {
+                document.getElementById('val-output').innerHTML = `${230 + Math.floor(Math.random() * 5)}<span>档</span>`;
+                document.getElementById('val-power').innerHTML = `${(32 + Math.random() * 1.5).toFixed(1)}<span>W</span>`;
+                document.getElementById('val-rpm').innerHTML = `${6000 + Math.floor(Math.random() * 100)}<span>转</span>`;
+            }, 1500);
+
+            const typewriterElement = document.getElementById('typewriter');
+            const textToType = "超频已开启 -> 制冷功率拉满...";
+            let i = 0;
+            function typeWriter() {
+                if (i < textToType.length) {
+                    typewriterElement.textContent += textToType.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 80);
+                } else {
+                    setTimeout(() => { typewriterElement.textContent = ""; i = 0; typeWriter(); }, 3000);
+                }
+            }
+            setTimeout(typeWriter, 1000);
+        }
+    </script>
+</body>
+</html>
