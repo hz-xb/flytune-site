@@ -77,6 +77,8 @@
             transition: transform 0.2s;
         }
         .nav-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.9); }
+        .nav-actions { display: flex; align-items: center; gap: 8px; }
+        .nav-btn.admin { padding: 8px 14px; font-size: 12px; }
 
         .hero {
             padding: 120px 20px 40px; text-align: center;
@@ -345,7 +347,10 @@
 
         <nav class="nav">
             <div class="logo">FlyTune</div>
-            <a href="#download" class="nav-btn">下载软件</a>
+            <div class="nav-actions">
+                <a href="https://hz-xb.github.io/flytune-admin/" class="nav-btn admin" target="_blank" rel="noopener">后台</a>
+                <a href="#download" class="nav-btn">下载软件</a>
+            </div>
         </nav>
 
         <header class="hero">
